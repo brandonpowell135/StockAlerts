@@ -31,7 +31,7 @@ for index, row in drop_days.iterrows():
     print(f"Date: {index.date()}, Drop: {drop_percentage:.2f}%")
 
 # Ensure total_shares is a single number by converting to a float explicitly
-total_shares = float(total_shares)
+total_shares = float(total_shares.iloc[0]) if isinstance(total_shares, pd.Series) else float(total_shares)
 
 # Calculate average cost safely
 average_cost = total_invested / total_shares if total_shares > 0 else 0
