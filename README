@@ -1,3 +1,11 @@
 README
 
 This will be my readme
+
+features:
+allow users to add a personal alert on discord. the command might look like this:
+$TQQQ,drop,10%,
+
+Todo:
+-add discord bot (test)
+-figure out how to run bot 24/7

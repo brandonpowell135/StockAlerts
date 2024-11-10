@@ -1,1 +1,1 @@
-#added discord bot
+import discord as dc
