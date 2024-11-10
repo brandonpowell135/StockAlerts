@@ -1,0 +1,10 @@
+version: '3'
+services:
+  stockbot:
+    build: .
+    image: stockalert-image  # Specify a shared image name for both services
+    command: python stockbot.py
+
+  stockalert:
+    image: stockalert-image  # Use the shared image to avoid rebuilding
+    command: python Stock_Alert1.py
