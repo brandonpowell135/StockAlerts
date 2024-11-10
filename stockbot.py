@@ -47,7 +47,7 @@ async def on_ready():
 
 # Define a simple command
 @bot.command()
-async def (ctx):
+async def pp(ctx):
     await ctx.send("poop")
 
 # Run the bot with your tocken
