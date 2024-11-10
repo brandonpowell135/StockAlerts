@@ -68,3 +68,4 @@ async def status(ctx):
 
 # Run the bot with your tocken
 bot.run(TOKEN)
+test
