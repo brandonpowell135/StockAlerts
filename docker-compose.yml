@@ -7,4 +7,4 @@ services:
 
   stockalert:
     image: stockalert-image  # Use the shared image to avoid rebuilding
-    command: python Stock_Alert1.py
+    command: python stockalert1.py
