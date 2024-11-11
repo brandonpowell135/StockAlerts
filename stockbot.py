@@ -50,5 +50,10 @@ async def on_ready():
 async def pp(ctx):
     await ctx.send("poop")
 
+# Define a simple command
+@bot.command()
+async def dd(ctx):
+    await ctx.send("dodo")
+
 # Run the bot with your tocken
 bot.run(TOKEN)
