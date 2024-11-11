@@ -9,3 +9,14 @@ $TQQQ,drop,10%,
 Todo:
 -add discord bot (test)
 -figure out how to run bot 24/7
+
+
+how to upload image:
+docker build -t stockalert1 .
+docker build -t stockbot .
+
+docker tag stockalert1 ghcr.io/brandonpowell135/stockalerts/stockalert1:latest
+docker tag stockbot ghcr.io/brandonpowell135/stockalerts/stockbot:latest    
+
+docker push ghcr.io/brandonpowell135/stockalerts/stockalert1:latest
+docker push ghcr.io/brandonpowell135/stockalerts/stockbot:latest
