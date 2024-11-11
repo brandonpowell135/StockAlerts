@@ -7,8 +7,14 @@ allow users to add a personal alert on discord. the command might look like this
 $TQQQ,drop,10%,
 
 Todo:
--add discord bot (test)
--figure out how to run bot 24/7
+-add drop down menu option
+-add MACD alert type
+-look into adding a file (only if alerts dont save if bot restarts)
+-command to see users current alerts
+-configure the backtest code
+-create a list for funny comments to say
+-command to show finviz chart
+-update backtest calc to buy next day open after a drop of 10% or more
 
 
 how to upload image:
@@ -20,3 +26,32 @@ docker tag stockbot ghcr.io/brandonpowell135/stockalerts/stockbot:latest
 
 docker push ghcr.io/brandonpowell135/stockalerts/stockalert1:latest
 docker push ghcr.io/brandonpowell135/stockalerts/stockbot:latest
+
+Ex. alert
+user: [!alert]
+bot: ["Enter the ticker symbol of the stock you want the alert for"]
+user: {TICKER}
+Bot: ["what alert type do you want"]
+user: [drop down(%drop)]
+bot: ["what percent do you want to be notified (enter just the number)"]
+user: {10}
+bot: [you will be notified when {TICKER} drops by {10}%]
+
+Ex. backtest
+user: [!backtest]
+bot: ["Enter the ticker symbol of the stock you want to backtest"]
+user: {TICKER}
+Bot: ["what backtest type do you want"]
+user: [drop down(%drop)]
+bot: ["what percent do you want to be notified (enter just the number)"]
+user: {10}
+bot: [what date do you want the backtest to start? (dd/mm/yyyy)]
+user: [01/01/2020]
+bot [output what it is currently showing]
+
+commands:
+!alert
+!backtest
+!showalerts
+
+
