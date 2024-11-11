@@ -9,6 +9,7 @@ $TQQQ,drop,10%,
 Todo:
 -add drop down menu option
 -add MACD alert type
+-add price alert type
 -look into adding a file (only if alerts dont save if bot restarts)
 -command to see users current alerts
 -configure the backtest code
@@ -27,7 +28,7 @@ docker tag stockbot ghcr.io/brandonpowell135/stockalerts/stockbot:latest
 docker push ghcr.io/brandonpowell135/stockalerts/stockalert1:latest
 docker push ghcr.io/brandonpowell135/stockalerts/stockbot:latest
 
-Ex. alert
+Ex. !alert
 user: [!alert]
 bot: ["Enter the ticker symbol of the stock you want the alert for"]
 user: {TICKER}
@@ -37,7 +38,7 @@ bot: ["what percent do you want to be notified (enter just the number)"]
 user: {10}
 bot: [you will be notified when {TICKER} drops by {10}%]
 
-Ex. backtest
+Ex. !backtest
 user: [!backtest]
 bot: ["Enter the ticker symbol of the stock you want to backtest"]
 user: {TICKER}
@@ -49,9 +50,19 @@ bot: [what date do you want the backtest to start? (dd/mm/yyyy)]
 user: [01/01/2020]
 bot [output what it is currently showing]
 
+Ex. !test
+user: [!test]
+bot: [...
+
+Ex. !recap
+user: [!recap]
+...
+
 commands:
 !alert
 !backtest
 !showalerts
+!test
+!recap
 
 
