@@ -34,8 +34,8 @@ def get_stock_price(ticker):
 @tasks.loop(minutes=5) # Run the check every 5 minutes
 async def monitor_stock():
     percent_drop = get_stock_price(ticker)
-    
-    if percent_drop is not None and percent_drop >= 10:
+    #chenged to 1%
+    if percent_drop is not None and percent_drop >= 1:
         # Send a message to discord
         channel = bot.get_channel(channel_ID)
         await channel.send(f"Alert: {ticker} stock has dropped by {percent_drop:.2f}%!")
@@ -57,3 +57,4 @@ async def dd(ctx):
 
 # Run the bot with your tocken
 bot.run(TOKEN)
+#test
