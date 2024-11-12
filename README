@@ -17,7 +17,8 @@ Todo:
 -command to show finviz chart
 -update backtest calc to buy next day open after a drop of 10% or more
 -look at getting tradingviewer set up with that specific MACD
-
+-combine into one .py
+-set up the alert to output the stock percent drop/raise at the end of the day for testing purposes
 
 how to upload image:
 docker build -t stockalert1 .
