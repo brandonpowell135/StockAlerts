@@ -19,7 +19,8 @@ Todo:
 -look at getting tradingviewer set up with that specific MACD
 -combine into one .py
 -set up the alert to output the stock percent drop/raise at the end of the day for testing purposes
--add command to clean chat messages 
+-add command to clean chat messages
+-add alert for when it passes SMA lines
 
 how to upload image:
 docker build -t stockalert1 .
