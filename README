@@ -22,6 +22,8 @@ Todo:
 -add command to clean chat messages
 -add alert for when it passes SMA lines
 -change output on VSC to green
+-add channels [options, long term inversting, managment, general alerts, How-To]
+-Command to wipe all alerts (list.clear())
 
 how to upload image:
 docker build -t stockalert1 .
@@ -69,5 +71,17 @@ commands:
 !showalerts
 !test
 !recap
+
+discord_bot_project/
+│
+├── bot.py              # Main entry point for the bot
+├── cogs/               # Folder for different modules (cogs)
+│   ├── strategy_alerts.py   # Strategy alert logic
+│   ├── portfolio.py         # Portfolio management
+│   └── general_chat.py      # General chat commands
+├── config.py            # Bot configuration (token, settings)
+├── requirements.txt     # List of dependencies
+└── utils/               # Utility functions, helpers
+    └── notifier.py      # Functions for sending alerts/notifications
 
 
