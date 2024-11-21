@@ -24,6 +24,7 @@ Todo:
 -change output on VSC to green
 -add channels [options, long term inversting, managment, general alerts, How-To]
 -Command to wipe all alerts (list.clear())
+-create a unit test - test unit development
 
 how to upload image:
 docker build -t stockalert1 .
