@@ -25,6 +25,7 @@ Todo:
 -add channels [options, long term inversting, managment, general alerts, How-To]
 -Command to wipe all alerts (list.clear())
 -create a unit test - test unit development
+-create data in excel to backtest for different scenerios. eg. custom open/close data
 
 how to upload image:
 docker build -t stockalert1 .
