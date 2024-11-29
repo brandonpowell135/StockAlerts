@@ -40,6 +40,23 @@ docker tag stockbot ghcr.io/brandonpowell135/stockalerts/stockbot:latest
 docker push ghcr.io/brandonpowell135/stockalerts/stockalert1:latest
 docker push ghcr.io/brandonpowell135/stockalerts/stockbot:latest
 
+how to update virtual enviorment:
+cd /path/to/your/project
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+pip install package_name
+
+how to pull repo:
+git status
+git clone https://github.com/brandonpowell135/StockAlerts
+git config --global user.name "Brandon Powell"
+git config --global user.email "brandonpowell135@gmail.com"
+
+
+
+
 Ex. !alert
 user: [!alert]
 bot: ["Enter the ticker symbol of the stock you want the alert for"]
