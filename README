@@ -29,6 +29,7 @@ Todo:
 -Command to wipe all alerts (list.clear())
 -create a unit test - test unit development
 -create data in excel to backtest for different scenerios. eg. custom open/close data
+-watch the youtube video on creating images for docker
 
 how to upload image:
 docker build -t stockalert1 .
