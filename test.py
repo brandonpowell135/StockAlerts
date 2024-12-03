@@ -14,6 +14,11 @@ intents = discord.Intents.default()
 intents.message_content = True  # Make sure to allow reading messages
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+class User():
+    def __init__(self,username):
+        self.username = username
+        pass
+
 def get_stock_data(ticker):
     stock = yf.Ticker(ticker)
     data = stock.history(period="1d")
@@ -44,28 +49,22 @@ class Strategies:
         percent_drop = ((self.open_price - self.current_price) / self.open_price) * 100
         print(target_percent - percent_drop)
 
-class Discordbot:
-    def __init__(self,bot):
+class DiscordBot():
+    def __init__(self, bot):
         self.bot = bot
-        self.bot.command()(self.ss)
-        
-    @bot.event
+        self.alert_commands()
+
     async def on_ready():
         print(f'Logged in as {bot.user} ')
 
-    @bot.command()
-    async def setalert(ctx, ticker: str, threshold: float):
-    #async def ss(ctx):
-        response = f"alert for [ {ticker} ] is set at [ {threshold} ]%"
-        await ctx.send(response)
-        print(ticker,threshold)
-        return threshold
+    def alert_commands(self):
+        @self.bot.command()
+        async def setalert(ctx, ticker: str, threshold: str):
+            threshold = float(threshold)
+            await ctx.send(f"Alert set for {ticker} at {threshold}")
+            user_id = ctx.author.id
 
-#strategies = Strategies(get_stock_data(threshold))
-#target_price = 150
-#target_percent = threshold
-#strategies.price(target_price)
-#strategies.percent(target_percent)
+discord_bot = DiscordBot(bot)
 
 # Run the bot with your token
 bot.run(TOKEN)
