@@ -7,23 +7,17 @@ allow users to add a personal alert on discord. the command might look like this
 $TQQQ,drop,10%,
 
 Todo:
--add drop down menu option
 -add MACD alert type
--add price alert type
--look into adding a file (only if alerts dont save if bot restarts)
--command to see users current alerts
 -configure the backtest code
 -create a list for funny comments to say
 -command to show finviz chart
 -update backtest calc to buy next day open after a drop of 10% or more
 -look at getting tradingviewer set up with that specific MACD
--combine into one .py
--set up the alert to output the stock percent drop/raise at the end of the day for testing purposes
+-set up the alert to output the stock percent drop/raise at the end of the day for testing purposes ✓
 -add command to clean chat messages
 -add alert for when it passes SMA lines
 -change output on VSC to green
 -add channels [options, long term inversting, managment, general alerts, How-To]
--Command to wipe all alerts (list.clear())
 -create a unit test - test unit development
 -create data in excel to backtest for different scenerios. eg. custom open/close data
 -watch the youtube video on creating images for docker
