@@ -21,6 +21,7 @@ Todo:
 -create a unit test - test unit development
 -create data in excel to backtest for different scenerios. eg. custom open/close data
 -watch the youtube video on creating images for docker
+-Portfolio managment: run monthly to see portfolio allocation
 
 how to upload image:
 docker build -t stockalert1 .
@@ -47,43 +48,13 @@ git config --global user.name "Brandon Powell"
 git config --global user.email "brandonpowell135@gmail.com"
 
 
-
-
-Ex. !alert
-user: [!alert]
-bot: ["Enter the ticker symbol of the stock you want the alert for"]
-user: {TICKER}
-Bot: ["what alert type do you want"]
-user: [drop down(%drop)]
-bot: ["what percent do you want to be notified (enter just the number)"]
-user: {10}
-bot: [you will be notified when {TICKER} drops by {10}%]
-
-Ex. !backtest
-user: [!backtest]
-bot: ["Enter the ticker symbol of the stock you want to backtest"]
-user: {TICKER}
-Bot: ["what backtest type do you want"]
-user: [drop down(%drop)]
-bot: ["what percent do you want to be notified (enter just the number)"]
-user: {10}
-bot: [what date do you want the backtest to start? (dd/mm/yyyy)]
-user: [01/01/2020]
-bot [output what it is currently showing]
-
-Ex. !test
-user: [!test]
-bot: [...
-
-Ex. !recap
-user: [!recap]
-...
-
 commands:
-!alert
-!backtest
-!showalerts
-!test
+/set_percent_alert
+/set_price_alert
+/myalerts
+/removealerts
+/testbot
+/backtest
 !recap
 
 discord_bot_project/
@@ -92,6 +63,7 @@ discord_bot_project/
 ├── cogs/               # Folder for different modules (cogs)
 │   ├── strategy_alerts.py   # Strategy alert logic
 │   ├── portfolio.py         # Portfolio management
+│   ├── backtest.py         # Portfolio management
 │   └── general_chat.py      # General chat commands
 ├── config.py            # Bot configuration (token, settings)
 ├── requirements.txt     # List of dependencies
