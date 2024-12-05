@@ -3,8 +3,26 @@ README
 This will be my readme
 
 features:
-allow users to add a personal alert on discord. the command might look like this:
-$TQQQ,drop,10%,
+alerts
+backtesting
+portfolio managment
+
+alerts: 
+    percent change 
+    price hit
+    Support/Resistance Breaks
+    Moving Average Crossovers
+    RSI (Relative Strength Index) Alerts
+    MACD (Moving Average Convergence Divergence)
+    Bollinger Bands
+    Options Imbalance or Unusual Activity
+
+backtest: 
+    1. Buying and holding when a stock drops a set percent from a set date
+    2. Buying on a set schedule from a set date using portfolio automanagment
+
+Portfolio Managment: 
+    holding allocations
 
 Todo:
 -add MACD alert type
@@ -22,6 +40,7 @@ Todo:
 -create data in excel to backtest for different scenerios. eg. custom open/close data
 -watch the youtube video on creating images for docker
 -Portfolio managment: run monthly to see portfolio allocation
+-Add backtest vs SPY graph
 
 how to upload image:
 docker build -t stockalert1 .
