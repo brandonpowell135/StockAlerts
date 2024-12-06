@@ -6,6 +6,7 @@ import os
 from stockalerts import setup_stock_alerts
 from portfolio import login_to_robinhood, portfolio_managment
 from backtest import backtest
+from generalchat import general_commands
 
 # Load environment variables
 load_dotenv()
@@ -25,6 +26,7 @@ def main():
 
     # Set up bot commands
     setup_stock_alerts(bot, CHANNEL_ID)
+    general_commands(bot)
     portfolio_managment(bot)
     backtest(bot)
 

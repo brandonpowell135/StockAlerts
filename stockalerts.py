@@ -8,6 +8,13 @@ import json
 # Load environment variables
 load_dotenv()
 
+# Define the relative path to the alerts.json file
+alerts_dir = "StockAlerts"
+alerts_file_path = os.path.join(alerts_dir, "alerts.json")
+
+# Ensure the directory exists
+os.makedirs(alerts_dir, exist_ok=True)
+
 # Save alerts to file
 def save_alerts_to_file():
     with open("alerts.json", "w") as file:
@@ -42,9 +49,11 @@ def get_stock_data(ticker):
     else:
         return None
 
+
 # Function to calculate percent drop
 def percent_calc(prev_close_price, current_price):
     return ((current_price - prev_close_price) / prev_close_price) * 100
+
 
 # Bot setup for stock alerts
 def setup_stock_alerts(bot, CHANNEL_ID):
@@ -103,6 +112,7 @@ def setup_stock_alerts(bot, CHANNEL_ID):
         alerts = [alert for alert in alerts if alert["user_id"] != interaction.user.id]
         save_alerts_to_file()
         await interaction.response.send_message("All your alerts have been removed.")
+
 
     # Alert Manager
     @tasks.loop(minutes=1)  # Check every minute
