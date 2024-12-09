@@ -4,12 +4,12 @@ on:
   push
 
 jobs:
-  build_and publish:
+  build_and_publish:
     runs-on: ubuntu-latest
     steps:
       -uses: actions/checkout@v3
       -name: Build and push the image
         run: |
-          docker login --username brandonpowell135 --password ${{ secrets.GH.PAT}} ghcr.io
-          docker build . --tag ghcr.io/brandonpowell135/main:latest
-          docker push --tag ghcr.io/brandonpowell135/main:latest
+          sudo docker login --username brandonpowell135 --password ${{ secrets.GH.PAT}} ghcr.io
+          sudo docker build . --tag ghcr.io/brandonpowell135/stockalerts/stockalertbot:latest
+          sudo docker push --tag ghcr.io/brandonpowell135/stockalerts/stockalertbot:latest
