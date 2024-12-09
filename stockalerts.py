@@ -87,7 +87,7 @@ def setup_stock_alerts(bot, CHANNEL_ID):
         if stock_data:
             alerts.append({"user_id": interaction.user.id, "ticker": ticker, "target_percent": target_percent})
             save_alerts_to_file()
-            await interaction.followup.send(f"Alert set for **{ticker}** at a **{target_percent}**% drop")
+            await interaction.followup.send(f"Alert set for **{ticker}** at a **{target_percent}**% drop/gain")
         else:
             await interaction.followup.send(f"Invalid ticker: **{ticker}**.")
 
@@ -139,7 +139,7 @@ def setup_stock_alerts(bot, CHANNEL_ID):
                     if percent_drop <= target_percent:
                         channel = bot.get_channel(CHANNEL_ID)
                         user = await bot.fetch_user(alert["user_id"])
-                        await channel.send(f"{user.mention} Alert: {alert['ticker']} has hit your target percent of {alert['target_percent']} with a drop of {percent_drop:.2f}%")
+                        await channel.send(f"{user.mention} Alert: {alert['ticker']} has hit your target percent of {alert['target_percent']} with a drop/gain of {percent_drop:.2f}%")
                         #alerts.remove(alert)
 
     # Start the check_alerts task when the bot is ready

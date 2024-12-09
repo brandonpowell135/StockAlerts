@@ -3,6 +3,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 import os
 
+
 from stockalerts import setup_stock_alerts
 from portfolio import login_to_robinhood, portfolio_managment
 from backtest import backtest
