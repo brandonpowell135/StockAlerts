@@ -12,5 +12,5 @@ jobs:
       - name: Build and push the image
         run: |
           sudo docker login --username brandonpowell135 --password ${{ secrets.GH_PAT }} ghcr.io
-          sudo docker build . --tag ghcr.io/brandonpowell135/stockalerts/stockalertbot:latest
-          sudo docker push ghcr.io/brandonpowell135/stockalerts/stockalertbot:latest
+          sudo docker build . --tag ghcr.io/brandonpowell135/stockalertbot:latest
+          sudo docker push ghcr.io/brandonpowell135/stockalertbot:latest
