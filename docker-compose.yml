@@ -1,6 +1,0 @@
-services:
-  stockbot:
-    build: .
-    image: stockalert-image  # Specify a shared image name for both services
-    command: python main.py
-
