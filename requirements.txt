@@ -2,3 +2,6 @@ discord.py
 yfinance
 python-dotenv
 pandas
+os
+json
+robin_stocks
