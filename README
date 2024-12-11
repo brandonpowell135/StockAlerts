@@ -42,6 +42,7 @@ Todo:
 -Portfolio managment: run monthly to see portfolio allocation
 -Add backtest vs SPY graph
 -figure out a way for the .json file to not get overwritten when a new image is grabbed
+-look at sharpe ratio
 
 how to upload image:
 docker build -t stockalert1 .
