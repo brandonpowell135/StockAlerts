@@ -20,7 +20,7 @@ intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 def main():
-    # Log in to Robinhood
+    #Log in to Robinhood
     if not login_to_robinhood():
         print("Failed to log in to Robinhood.")
         return
