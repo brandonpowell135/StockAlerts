@@ -31,7 +31,7 @@ def calculate_upro_mimic(ticker="SPY", upro_ticker="UPRO", start_date="2020-01-0
     return combined_data
 
 # Specify the time range
-start_date = "2020-01-01"
+start_date = "2010-01-01"
 end_date = "2024-12-31"
 
 # Calculate and save results
