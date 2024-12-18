@@ -1,11 +1,9 @@
-README
-
-This will be my readme
+README:
 
 features:
-alerts
-backtesting
-portfolio managment
+    alerts
+    backtesting
+    portfolio managment
 
 alerts: 
     percent change 
@@ -18,8 +16,10 @@ alerts:
     Options Imbalance or Unusual Activity
 
 backtest: 
-    1. Buying and holding when a stock drops a set percent from a set date
-    2. Buying on a set schedule from a set date using portfolio automanagment
+    1. Buying and holding when X stock drops X percent from X date
+    2. Buying on a set schedule from X date using portfolio automanagment
+    3. Holding SPY(100%) only until UPRO drops X percent, then holding URPO(100%)
+    4. 
 
 Portfolio Managment: 
     holding allocations
@@ -29,6 +29,7 @@ Todo:
 -configure the backtest code
 -create a list for funny comments to say
 -command to show finviz chart
+-Look into alpaca
 -update backtest calc to buy next day open after a drop of 10% or more
 -look at getting tradingviewer set up with that specific MACD
 -set up the alert to output the stock percent drop/raise at the end of the day for testing purposes ✓
