@@ -21,15 +21,19 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 def main():
     #Log in to Robinhood
+    logged_in = login_to_robinhood()
     if not login_to_robinhood():
         print("Failed to log in to Robinhood.")
-        return
 
     # Set up bot commands
     setup_stock_alerts(bot, CHANNEL_ID)
     general_commands(bot)
-    portfolio_managment(bot)
     backtest(bot)
+
+    if logged_in:
+        portfolio_managment(bot)
+    else:
+        print("Portfolio management commands will not be available.")
 
     # Run bot
     bot.run(TOKEN)

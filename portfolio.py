@@ -1,5 +1,6 @@
 import robin_stocks.robinhood as r
 import os
+import pyotp
 
 from dotenv import load_dotenv
 from discord.ext import commands
@@ -8,15 +9,19 @@ from discord.ext import commands
 # Robinhood credentials
 ROBINHOOD_USERNAME = os.getenv("ROBINHOOD_USERNAME")
 ROBINHOOD_PASSWORD = os.getenv("ROBINHOOD_PASSWORD")
+TOTP_SECRET = os.getenv("TOTP_SECRET")
 
 # Login to Robinhood
 def login_to_robinhood():
     try:
-        mfa_code = input("Enter the 2FA code: ")  # Prompt user for 2FA code
-        r.authentication.login(
+        totp = pyotp.TOTP(TOTP_SECRET)
+        two_factor_code = totp.now()
+        print(f"Generated TOTP Code: {two_factor_code}")  # Debug the TOTP code
+
+        login_response = r.authentication.login(
             username=ROBINHOOD_USERNAME,
             password=ROBINHOOD_PASSWORD,
-            mfa_code=mfa_code
+            mfa_code=two_factor_code
         )
         return True
     except Exception as e:
