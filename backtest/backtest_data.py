@@ -2,7 +2,7 @@ import yfinance as yf
 import pandas as pd
 
 # Function to calculate daily returns and mimic UPRO
-def calculate_upro_mimic(ticker="^GSPC", upro_ticker="UPRO", start_date="2020-01-01", end_date="2024-12-31"):
+def calculate_upro_mimic(ticker="SPY", upro_ticker="UPRO", start_date="2020-01-01", end_date="2024-12-31"):
     # Download SPY historical data
     GSPC_data = yf.download(ticker, start=start_date, end=end_date)
     
@@ -38,6 +38,6 @@ end_date = "2024-12-31"
 upro_data = calculate_upro_mimic(start_date=start_date, end_date=end_date)
 
 # Save to a CSV file
-upro_data.to_csv("upro_mimic.csv")
+upro_data.to_csv("upro_mimic_spy.csv")
 
 print("UPRO mimic data has been saved to 'upro_mimic.csv'.")
