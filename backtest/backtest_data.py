@@ -2,29 +2,29 @@ import yfinance as yf
 import pandas as pd
 
 # Function to calculate daily returns and mimic UPRO
-def calculate_upro_mimic(ticker="SPY", upro_ticker="UPRO", start_date="2020-01-01", end_date="2024-12-31"):
+def calculate_upro_mimic(ticker="^GSPC", upro_ticker="UPRO", start_date="2020-01-01", end_date="2024-12-31"):
     # Download SPY historical data
-    spy_data = yf.download(ticker, start=start_date, end=end_date)
+    GSPC_data = yf.download(ticker, start=start_date, end=end_date)
     
     # Download UPRO historical data
     upro_data = yf.download(upro_ticker, start=start_date, end=end_date)
 
     # Calculate daily returns for SPY
-    spy_data["Daily Return"] = spy_data["Adj Close"].pct_change()
+    GSPC_data["Daily Return"] = GSPC_data["Adj Close"].pct_change()
 
     # Mimic UPRO (3x SPY's daily return)
-    spy_data["UPRO Mimic"] = spy_data["Daily Return"] * 3
+    GSPC_data["UPRO Mimic"] = GSPC_data["Daily Return"] * 3
 
     # Calculate daily returns for UPRO
     upro_data["Daily Return"] = upro_data["Adj Close"].pct_change()
 
     # Align indices to ensure compatibility
-    upro_data = upro_data.reindex(spy_data.index)
+    upro_data = upro_data.reindex(GSPC_data.index)
 
     # Combine SPY and UPRO data
     combined_data = pd.DataFrame({
-        "SPY Daily Return": spy_data["Daily Return"],
-        "UPRO Mimic": spy_data["UPRO Mimic"],
+        "S&P Daily Return": GSPC_data["Daily Return"],
+        "UPRO Mimic": GSPC_data["UPRO Mimic"],
         "UPRO Daily Return": upro_data["Daily Return"]
     })
 
