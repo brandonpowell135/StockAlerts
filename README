@@ -44,6 +44,7 @@ Todo:
 -figure out a way for the .json file to not get overwritten when a new image is grabbed
 -look at sharpe ratio
 -look at python flask for website
+-add max drow downs. 
 
 how to upload image:
 docker build -t stockalert1 .
