@@ -45,6 +45,8 @@ Todo:
 -look at sharpe ratio
 -look at python flask for website
 -add max drow downs. 
+-make backtests as options
+-organize .csv sheet
 
 how to upload image:
 docker build -t stockalert1 .
