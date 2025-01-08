@@ -7,20 +7,21 @@ def calculate_upro_mimic(ticker, start_date, end_date):
     # Download SPY historical data
     SPY_data = yf.download(ticker, start=start_date, end=end_date)
     # Calculate daily returns for SPY
-    SPY_data["Daily Return"] = SPY_data["Adj Close"].pct_change()
+    SPY_data["Daily Return"] = SPY_data["Close"].pct_change()
     # Mimic UPRO (3x SPY's daily return)
-    SPY_data["UPRO Mimic"] = SPY_data["Daily Return"] * 3
+    SPY_data["UPRO Mimic"] = (SPY_data["Daily Return"] * 3) + 0.0000023
 
     # Combine SPY and UPRO data
     combined_data = pd.DataFrame({
         "S&P Daily Return": SPY_data["Daily Return"],
         "UPRO Mimic Daily Return": SPY_data["UPRO Mimic"],
+
     })
 
     # Add cumulative returns for all three, starting with a value of 100
     initial_value = 100
     combined_data["SPY Cumulative"] = (1 + combined_data["S&P Daily Return"]).cumprod() * initial_value
-    combined_data["UPRO Mimic Cumulative"] = (1 - 0.00015 + combined_data["UPRO Mimic Daily Return"]).cumprod() * initial_value
+    combined_data["UPRO Mimic Cumulative"] = (1 - combined_data["UPRO Mimic Daily Return"]).cumprod() * initial_value
 
     return combined_data
 
@@ -92,10 +93,10 @@ def simulate_profile_return(combined_data, weekly_investment, spy_allocation, up
 
 
     # Add the portfolio value to the combined data
-    combined_data["SPY Portfolio Value"] = portfolio_spy_value
+    combined_data["S&P Portfolio Value"] = portfolio_spy_value
     combined_data["UPRO Portfolio Value"] = portfolio_upro_value
 
-    combined_data["SPY Portfolio Normal"] = portfolio_spy_normal
+    combined_data["S&P Portfolio Normal"] = portfolio_spy_normal
     combined_data["UPRO Portfolio Normal"] = portfolio_upro_normal
     combined_data["Profile Portfolio Value"] = portfolio_value
     
@@ -104,15 +105,15 @@ def simulate_profile_return(combined_data, weekly_investment, spy_allocation, up
     final_contributions = combined_data["Contributions"].iloc[-1]
 
     combined_data["UPRO_mimic_return"] = ((combined_data["UPRO Portfolio Value"].iloc[-1] - final_contributions) / final_contributions) * 100
-    combined_data["SPY_return"] = ((combined_data["SPY Portfolio Value"].iloc[-1] - final_contributions) / final_contributions) * 100
+    combined_data["S&P_return"] = ((combined_data["S&P Portfolio Value"].iloc[-1] - final_contributions) / final_contributions) * 100
     combined_data["Profile_return"] = ((combined_data["Profile Portfolio Value"].iloc[-1] - final_contributions) / final_contributions) * 100
 
     return combined_data
 
 # Specify the time range
-start_date = "1996-01-01"
-end_date = "2020-12-31"
-ticker = "SPY"
+start_date = "1980-01-01"
+end_date = "2028-01-01"
+ticker = "^GSPC"
 
 weekly_investment=100
 spy_allocation=0.7
@@ -131,8 +132,8 @@ upro_data.to_csv("upro_mimic_with_profile.csv")
 plt.figure(figsize=(12, 6))
 
 plt.plot(upro_data.index,
-upro_data["SPY Portfolio Value"], 
-label=f"SPY Cumulative Return {upro_data['SPY_return'].iloc[-1]:.2f}%", 
+upro_data["S&P Portfolio Value"], 
+label=f"S&P Cumulative Return {upro_data['S&P_return'].iloc[-1]:.2f}%", 
 color="blue")
 
 plt.plot(upro_data.index, 
@@ -150,7 +151,7 @@ upro_data["Contributions"],
 label="Profile Contributions", 
 color="purple")
 
-plt.title("Cumulative Returns of SPY, UPRO Mimic, and Profile Portfolio")
+plt.title("Cumulative Returns of S&P, UPRO Mimic, and Profile Portfolio")
 plt.xlabel("Date")
 plt.ylabel("Portfolio Value")
 plt.legend()
