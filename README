@@ -45,8 +45,10 @@ Todo:
 -look at sharpe ratio
 -look at python flask for website
 -add max drow downs, and time it took for stock to recover
--make backtests as options
+-make backtests have options
 -organize .csv sheet
+-add a cash account
+-organize project structure
 
 how to upload image:
 docker build -t stockalert1 .
