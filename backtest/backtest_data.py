@@ -15,7 +15,6 @@ def calculate_upro_mimic(ticker, start_date, end_date):
     combined_data = pd.DataFrame({
         "S&P Daily Return": SPY_data["Daily Return"],
         "UPRO Mimic Daily Return": SPY_data["UPRO Mimic"],
-
     })
 
     # Add cumulative returns for all three, starting with a value of 100
