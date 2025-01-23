@@ -32,10 +32,8 @@ def simulate_profile_return(combined_data, weekly_investment, spy_allocation, up
     portfolio_spy_return = 0
     portfolio_upro_return = 0
     portfolio_contributions = 0
-    spy_high = 0
     upro_high = 0
     portfolio_high = 0
-    max_drawdown_spy = 0
     max_drawdown_upro = 0
     max_drawdown_portfolio = 0
     portfolio_value = []
@@ -44,6 +42,12 @@ def simulate_profile_return(combined_data, weekly_investment, spy_allocation, up
     portfolio_spy_normal = []
     portfolio_upro_normal = []
     portfolio_contributions_value = []
+    spy_high = 0  # Tracks the highest value
+    spy_drawdown_start = None  # Start date of the drawdown
+    spy_recovery_start = None  # Recovery start date
+    spy_recovery_end = None  # Recovery end date
+    max_drawdown_spy = 0  # Tracks the max drawdown
+    recovery_time = None  # Tracks the time taken for recovery
 
     # Add Quarter End column based on the last day of each quarter
     combined_data.index = pd.to_datetime(combined_data.index)
@@ -78,6 +82,50 @@ def simulate_profile_return(combined_data, weekly_investment, spy_allocation, up
             portfolio_spy_return = portfolio_spy_return * (1 + combined_data["S&P Daily Return"].iloc[i])
             portfolio_upro_return = portfolio_upro_return * (1 + combined_data["UPRO Mimic Daily Return"].iloc[i])
 
+
+        # Check for a new high in the portfolio
+        if portfolio_spy_return > spy_high:
+            # Record the new high and reset recovery and drawdown
+            spy_high = portfolio_spy_return
+            spy_recovery_start = None  # Reset recovery start date
+            spy_drawdown_start = None  # Reset drawdown start date
+
+                # If no new high, check if we're in a drawdown
+        if portfolio_spy_return < spy_high:
+            # Set the drawdown start date if it's the first drop below the high
+            if spy_drawdown_start is None:
+                spy_drawdown_start = combined_data.index[i]
+                print(f"Drawdown started on {spy_drawdown_start}")
+                print(spy_high)
+
+            # Calculate the current drawdown
+            spy_drawdown = (portfolio_spy_return - spy_high) / spy_high
+
+            # Update max drawdown if necessary
+            if spy_drawdown < max_drawdown_spy:
+                max_drawdown_spy = spy_drawdown
+                spy_drawdown_end = combined_data.index[i]
+                print(f"Max Drawdown on {spy_drawdown_end}: {max_drawdown_spy:.4f}")
+                print("3")
+
+                # Check if recovery starts after a drawdown
+                if spy_drawdown_start is not None and portfolio_spy_return >= spy_high:
+                    if spy_recovery_start is None:
+                        spy_recovery_start = combined_data.index[i]
+                        print(f"Recovery started on {spy_recovery_start}")
+                        print("4")
+
+                        # Recovery is complete once the value reaches or exceeds the high
+                        spy_recovery_end = combined_data.index[i]
+                        recovery_time = (spy_recovery_end - spy_drawdown_start).days  # Recovery from initial drawdown
+                        print(f"Recovered to previous high on {spy_recovery_end}, Recovery time: {recovery_time} days")
+                        print("5")
+
+            # Reset drawdown and recovery tracking
+            spy_drawdown_start = None
+            spy_recovery_start = None
+            
+            '''
             spy_high = max(spy_high, portfolio_spy_return)
             upro_high = max(upro_high, portfolio_upro_return)
 
@@ -86,6 +134,7 @@ def simulate_profile_return(combined_data, weekly_investment, spy_allocation, up
 
             max_drawdown_spy = min(max_drawdown_spy, spy_drawdown)
             max_drawdown_upro = min(max_drawdown_upro, upro_drawdown)
+            '''
 
         # Rebalance at the end of the quarter
         if combined_data["Quarter End"].iloc[i]:
@@ -133,8 +182,8 @@ def simulate_profile_return(combined_data, weekly_investment, spy_allocation, up
     return combined_data
 
 # Specify the time range
-start_date = "1900-01-01"
-end_date = "2222-12-01"
+start_date = "2020-01-01"
+end_date = "2020-12-01"
 ticker = "^GSPC"
 
 weekly_investment=100
