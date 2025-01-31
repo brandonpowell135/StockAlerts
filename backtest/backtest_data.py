@@ -43,11 +43,13 @@ def simulate_profile_return(combined_data, weekly_investment, spy_allocation, up
     portfolio_upro_normal = []
     portfolio_contributions_value = []
     spy_high = 0  # Tracks the highest value
+    spy_low = 0
     spy_drawdown_start = None  # Start date of the drawdown
     spy_recovery_start = None  # Recovery start date
     spy_recovery_end = None  # Recovery end date
     max_drawdown_spy = 0  # Tracks the max drawdown
-    recovery_time = None  # Tracks the time taken for recovery
+    #recovery_time = 0  # Tracks the time taken for recovery
+    max_recovery_time = pd.Timedelta(0)  # Start with 0 days
 
     # Add Quarter End column based on the last day of each quarter
     combined_data.index = pd.to_datetime(combined_data.index)
@@ -82,59 +84,28 @@ def simulate_profile_return(combined_data, weekly_investment, spy_allocation, up
             portfolio_spy_return = portfolio_spy_return * (1 + combined_data["S&P Daily Return"].iloc[i])
             portfolio_upro_return = portfolio_upro_return * (1 + combined_data["UPRO Mimic Daily Return"].iloc[i])
 
-
         # Check for a new high in the portfolio
-        if portfolio_spy_return > spy_high:
-            # Record the new high and reset recovery and drawdown
-            spy_high = portfolio_spy_return
-            spy_recovery_start = None  # Reset recovery start date
-            spy_drawdown_start = None  # Reset drawdown start date
+        if portfolio_spy_return > portfolio_contributions:
+            if spy_drawdown_start is not None:
+                spy_drawdown_end = combined_data.index[i]
 
-                # If no new high, check if we're in a drawdown
-        if portfolio_spy_return < spy_high:
+                recovery_time = spy_drawdown_end - spy_drawdown_start
+                if recovery_time > max_recovery_time:
+                    max_recovery_time = recovery_time
+                    print(f"Max Drawdown of {max_recovery_time.days} days")
+                    print(spy_high, spy_low)
+                    spy_drawdown = ((spy_high - spy_low) / spy_low) * 100
+                    print(spy_drawdown)
+                    spy_drawdown_start = None  # Reset drawdown start date
+
+        # If no new high, check if we're in a drawdown
+        if portfolio_spy_return < portfolio_contributions:
             # Set the drawdown start date if it's the first drop below the high
             if spy_drawdown_start is None:
                 spy_drawdown_start = combined_data.index[i]
-                print(f"Drawdown started on {spy_drawdown_start}")
-                print(spy_high)
+                spy_high = portfolio_spy_return
+                spy_low = min(spy_high, portfolio_spy_return)
 
-            # Calculate the current drawdown
-            spy_drawdown = (portfolio_spy_return - spy_high) / spy_high
-
-            # Update max drawdown if necessary
-            if spy_drawdown < max_drawdown_spy:
-                max_drawdown_spy = spy_drawdown
-                spy_drawdown_end = combined_data.index[i]
-                print(f"Max Drawdown on {spy_drawdown_end}: {max_drawdown_spy:.4f}")
-                print("3")
-
-                # Check if recovery starts after a drawdown
-                if spy_drawdown_start is not None and portfolio_spy_return >= spy_high:
-                    if spy_recovery_start is None:
-                        spy_recovery_start = combined_data.index[i]
-                        print(f"Recovery started on {spy_recovery_start}")
-                        print("4")
-
-                        # Recovery is complete once the value reaches or exceeds the high
-                        spy_recovery_end = combined_data.index[i]
-                        recovery_time = (spy_recovery_end - spy_drawdown_start).days  # Recovery from initial drawdown
-                        print(f"Recovered to previous high on {spy_recovery_end}, Recovery time: {recovery_time} days")
-                        print("5")
-
-            # Reset drawdown and recovery tracking
-            spy_drawdown_start = None
-            spy_recovery_start = None
-            
-            '''
-            spy_high = max(spy_high, portfolio_spy_return)
-            upro_high = max(upro_high, portfolio_upro_return)
-
-            spy_drawdown = (portfolio_spy_return - spy_high) / spy_high
-            upro_drawdown = (portfolio_upro_return - upro_high) / upro_high
-
-            max_drawdown_spy = min(max_drawdown_spy, spy_drawdown)
-            max_drawdown_upro = min(max_drawdown_upro, upro_drawdown)
-            '''
 
         # Rebalance at the end of the quarter
         if combined_data["Quarter End"].iloc[i]:
