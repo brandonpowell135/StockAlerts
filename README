@@ -14,6 +14,7 @@ alerts:
     MACD (Moving Average Convergence Divergence)
     Bollinger Bands
     Options Imbalance or Unusual Activity
+    test
 
 backtest: 
     1. Buying and holding when X stock drops X percent from X date
@@ -29,7 +30,6 @@ Todo:
 -configure the back test code
 -create a list for funny comments to say
 -Look into alpaca
-test
 -update backtest calc to buy next day open after a drop of 10% or more
 -look at getting tradingviewer set up with that specific MACD
 -set up the alert to output the stock percent drop/raise at the end of the day for testing purposes ✓
