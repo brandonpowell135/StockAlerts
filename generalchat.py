@@ -35,10 +35,3 @@ def general_commands(bot):
         await ctx.send("**/myalerts** shows you all your alerts set\n")        
         await asyncio.sleep(2)
         await ctx.send("**/removealerts** remove ALL your alerts\n\n")
-        await asyncio.sleep(2)
-        await ctx.send(" now type **!n**")
-
-    @bot.command()
-    async def n(ctx):
-        # Pick a random message
-        await ctx.send("NIGGER")
