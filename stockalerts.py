@@ -115,7 +115,7 @@ def setup_stock_alerts(bot, CHANNEL_ID):
 
 
     # Alert Manager
-    @tasks.loop(minutes=1)  # Check every minute
+    @tasks.loop(hours=6)  # Check every minute
     async def check_alerts():
         global alerts
         for alert in alerts[:]:  # Iterate over a copy of the alerts list
