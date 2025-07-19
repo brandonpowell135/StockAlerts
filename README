@@ -49,7 +49,7 @@ Todo:
 -organize .csv sheet
 -add a cash account
 -organize project structure
-
+r
 how to upload image:
 docker build -t stockalert1 .
 docker build -t stockbot .
