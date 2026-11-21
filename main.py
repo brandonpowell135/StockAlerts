@@ -11,6 +11,7 @@ load_dotenv()
 
 from backtest import backtest  # noqa: E402
 from generalchat import general_commands  # noqa: E402
+from market import setup_market  # noqa: E402
 from stockalerts import setup_stock_alerts  # noqa: E402
 
 log = logging.getLogger("stockalerts")
@@ -33,6 +34,7 @@ class StockBot(commands.Bot):
 
     async def setup_hook(self):
         setup_stock_alerts(self, self.channel_id)
+        setup_market(self, self.channel_id)
         general_commands(self)
         backtest(self)
 

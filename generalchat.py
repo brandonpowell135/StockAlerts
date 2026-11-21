@@ -27,7 +27,11 @@ def general_commands(bot):
         await ctx.send(
             "**/setalertprice** set an alert for when a stock drops to a price\n"
             "**/setalertpercent** set an alert for a daily move - negative for a drop, positive for a gain\n"
-            "**/myalerts** shows you all your alerts\n"
-            "**/removealerts** removes ALL your alerts\n"
+            "**/setalertsma** alert when a stock crosses its 20/50/100/200-day moving average\n"
+            "**/setalertrsi** alert when RSI crosses a level (below 30 = oversold, above 70 = overbought)\n"
+            "**/myalerts** shows you all your alerts, numbered\n"
+            "**/removealert** removes one alert by its number, **/removealerts** removes ALL of them\n"
+            "**/quote** price, daily move, moving averages and RSI for a stock\n"
+            "**/watchlist add/remove/show** the server watchlist, recapped every weekday at 4:10pm ET\n"
             "**/backtest** see how buying $100 on every X% daily drop would have done"
         )

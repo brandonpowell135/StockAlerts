@@ -7,6 +7,7 @@ import pytest
 from discord.ext import commands
 
 import stockalerts
+from conftest import FakeChannel, FakeInteraction, choice, make_history
 from stockalerts import (
     MARKET_TZ,
     is_market_open,
@@ -68,15 +69,7 @@ def test_save_then_load_roundtrip(tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 # Alert loop, driven with a real (never logged-in) Bot and fake channel/data
 # ---------------------------------------------------------------------------
-class FakeChannel:
-    def __init__(self):
-        self.messages = []
-
-    async def send(self, message):
-        self.messages.append(message)
-
-
-def run_check(tmp_path, monkeypatch, initial_alerts, prices, runs=1, fail_tickers=()):
+def run_check(tmp_path, monkeypatch, initial_alerts, prices, runs=1, fail_tickers=(), histories=None):
     """Run the alert check `runs` times; returns (channel, alerts_on_disk)."""
     path = tmp_path / "alerts.json"
     path.write_text(json.dumps(initial_alerts))
@@ -93,6 +86,7 @@ def run_check(tmp_path, monkeypatch, initial_alerts, prices, runs=1, fail_ticker
                 "prev_close_price": prev, "as_of": "2026-11-20"}
 
     monkeypatch.setattr(stockalerts, "get_stock_data", fake_get_stock_data)
+    monkeypatch.setattr(stockalerts, "get_daily_history", lambda ticker: (histories or {}).get(ticker))
     channel = FakeChannel()
 
     async def scenario():
@@ -151,3 +145,95 @@ def test_loop_survives_data_errors(tmp_path, monkeypatch):
     )
     assert channel.messages == []
     assert len(saved) == 1
+
+
+# ---------------------------------------------------------------------------
+# Alert types, evaluation, and the new commands
+# ---------------------------------------------------------------------------
+def test_old_saved_alerts_infer_their_type():
+    assert stockalerts.alert_type({"user_id": 1, "ticker": "SPY", "target_price": 1.0}) == "price"
+    assert stockalerts.alert_type({"user_id": 1, "ticker": "SPY", "target_percent": -5.0}) == "percent"
+    assert stockalerts.alert_type({"type": "rsi"}) == "rsi"
+
+
+SMA_ALERT = {"user_id": 1, "ticker": "AAPL", "type": "sma", "window": 20, "direction": "above"}
+RSI_ALERT = {"user_id": 1, "ticker": "AAPL", "type": "rsi", "threshold": 30.0, "direction": "below"}
+CROSSES_SMA = make_history([100.0] * 20 + [99.0, 105.0])
+CRASHES = make_history([100.0 + i for i in range(20)] + [90.0, 80.0, 70.0])
+
+
+def test_evaluate_sma_and_rsi_alerts():
+    assert "crossed above its 20-day SMA" in stockalerts.evaluate_alert(SMA_ALERT, None, CROSSES_SMA)
+    assert stockalerts.evaluate_alert(SMA_ALERT, None, make_history([100.0] * 22)) is None
+    assert stockalerts.evaluate_alert(SMA_ALERT, None, None) is None  # data unavailable
+    # Already fired for this trading day.
+    fired_today = {**SMA_ALERT, "last_triggered": "2026-11-20"}
+    assert stockalerts.evaluate_alert(fired_today, None, CROSSES_SMA) is None
+
+    # RSI crosses below 30 on exactly one bar of the crash; find it and check the message.
+    messages = [stockalerts.evaluate_alert(RSI_ALERT, None, CRASHES.iloc[:end]) for end in range(16, 24)]
+    assert sum(m is not None for m in messages) == 1
+    assert "RSI crossed below 30" in next(m for m in messages if m)
+
+
+def test_sma_alert_fires_once_per_day_in_loop(tmp_path, monkeypatch):
+    channel, saved = run_check(
+        tmp_path, monkeypatch, [SMA_ALERT], prices={}, runs=3, histories={"AAPL": CROSSES_SMA},
+    )
+    assert len(channel.messages) == 1
+    assert channel.messages[0].startswith("<@1> Alert: **AAPL** crossed above")
+    assert saved == [{**SMA_ALERT, "last_triggered": "2026-11-20"}]
+
+
+def test_describe_new_alert_types():
+    assert stockalerts.describe_alert(SMA_ALERT) == "**AAPL** crosses above its **20-day SMA**"
+    assert stockalerts.describe_alert(RSI_ALERT) == "**AAPL** RSI crosses below **30**"
+
+
+def setup_commands(tmp_path, monkeypatch, initial_alerts):
+    path = tmp_path / "alerts.json"
+    path.write_text(json.dumps(initial_alerts))
+    monkeypatch.setattr(stockalerts, "ALERTS_FILE", str(path))
+    monkeypatch.setattr(stockalerts, "get_stock_data", lambda t: {"as_of": "2026-11-20"})
+
+    async def build():
+        bot = commands.Bot(command_prefix="!", intents=discord.Intents.default())
+        stockalerts.setup_stock_alerts(bot, 123).cancel()
+        return bot
+
+    return asyncio.run(build()), path
+
+
+def call(bot, name, interaction, **kwargs):
+    asyncio.run(bot.tree.get_command(name).callback(interaction, **kwargs))
+    return interaction.messages[-1]
+
+
+def test_myalerts_numbered_and_removealert_by_number(tmp_path, monkeypatch):
+    bot, path = setup_commands(tmp_path, monkeypatch, [
+        {"user_id": 1, "ticker": "SPY", "target_price": 400.0},
+        {"user_id": 2, "ticker": "QQQ", "target_price": 300.0},  # someone else's
+        {"user_id": 1, "ticker": "TSLA", "target_percent": -5.0},
+        RSI_ALERT,
+    ])
+    listing = call(bot, "myalerts", FakeInteraction(1))
+    assert "1. **SPY**" in listing and "2. **TSLA**" in listing and "3. **AAPL** RSI" in listing
+    assert "QQQ" not in listing
+
+    assert "Removed alert: **TSLA**" in call(bot, "removealert", FakeInteraction(1), number=2)
+    assert "don't have an alert #5" in call(bot, "removealert", FakeInteraction(1), number=5)
+    saved = json.loads(path.read_text())
+    assert [a["ticker"] for a in saved] == ["SPY", "QQQ", "AAPL"]
+
+
+def test_set_sma_and_rsi_alerts(tmp_path, monkeypatch):
+    bot, path = setup_commands(tmp_path, monkeypatch, [])
+    reply = call(bot, "setalertsma", FakeInteraction(7), ticker=" nvda ", window=choice(50), direction=choice("below"))
+    assert reply == "Alert set: **NVDA** crosses below its **50-day SMA**"
+    reply = call(bot, "setalertrsi", FakeInteraction(7), ticker="nvda", direction=choice("above"))
+    assert reply == "Alert set: **NVDA** RSI crosses above **70**"  # default threshold
+    saved = json.loads(path.read_text())
+    assert saved == [
+        {"user_id": 7, "ticker": "NVDA", "type": "sma", "window": 50, "direction": "below"},
+        {"user_id": 7, "ticker": "NVDA", "type": "rsi", "threshold": 70.0, "direction": "above"},
+    ]
