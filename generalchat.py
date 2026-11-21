@@ -1,7 +1,5 @@
-import discord
-from discord.ext import commands, tasks
-import random
 import asyncio
+import random
 
 
 def general_commands(bot):
@@ -22,16 +20,14 @@ def general_commands(bot):
 
     @bot.command()
     async def bothelp(ctx):
-        # Pick a random message
         await ctx.send("BoT hElP i DoNt KnOw HoW tO dO iT.....\n")
-        # Delay (e.g., 5 seconds)
         await asyncio.sleep(2)
         await ctx.send("Dumbass look\n")
         await asyncio.sleep(2)
-        await ctx.send("**/setalertprice** you set an alert for the price you want. \n")
-        await asyncio.sleep(2)
-        await ctx.send("**/setalertpercent** you set an alert for the percent change you want - put negative for a drop positive for a gain\n")
-        await asyncio.sleep(2)
-        await ctx.send("**/myalerts** shows you all your alerts set\n")        
-        await asyncio.sleep(2)
-        await ctx.send("**/removealerts** remove ALL your alerts\n\n")
+        await ctx.send(
+            "**/setalertprice** set an alert for when a stock drops to a price\n"
+            "**/setalertpercent** set an alert for a daily move - negative for a drop, positive for a gain\n"
+            "**/myalerts** shows you all your alerts\n"
+            "**/removealerts** removes ALL your alerts\n"
+            "**/backtest** see how buying $100 on every X% daily drop would have done"
+        )

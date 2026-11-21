@@ -1,10 +1,20 @@
-# Example Dockerfile
-FROM python:3.9-slim
+FROM python:3.12-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    ALERTS_FILE=/app/data/alerts.json
 
 WORKDIR /app
 
-COPY . /app
+# Install dependencies first so code changes don't invalidate this layer.
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-RUN pip install -r requirements.txt
+COPY *.py ./
 
-CMD ["python", "main.py"]  # This will run main.py by default
+# Run as a non-root user; alerts persist on a volume across image updates.
+RUN useradd --create-home bot && mkdir -p /app/data && chown bot:bot /app/data
+USER bot
+VOLUME /app/data
+
+CMD ["python", "main.py"]
