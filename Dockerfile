@@ -1,5 +1,8 @@
 FROM python:3.12-slim
 
+# Links the GHCR package to this repo (shows it on the repo page and lets Actions publish it).
+LABEL org.opencontainers.image.source=https://github.com/brandonpowell135/StockAlerts
+
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     ALERTS_FILE=/app/data/alerts.json
