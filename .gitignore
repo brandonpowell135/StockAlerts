@@ -1,6 +1,15 @@
 .env
-.venv
+.venv/
 __pycache__/
 *.pyc
+.pytest_cache/
 originaltest.py
 originaltest2.py
+
+# Runtime state (alerts live here; mounted as a volume in Docker)
+data/
+alerts.json
+
+# Backtest script outputs
+upro_mimic_with_profile.csv
+cumulative_returns_and_profile_graph.png

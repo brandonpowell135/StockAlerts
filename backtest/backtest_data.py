@@ -1,237 +1,237 @@
-import yfinance as yf
+"""Backtest a weekly-contribution portfolio split between an index and a simulated 3x ETF (UPRO).
+
+Run directly: python backtest/backtest_data.py
+Writes upro_mimic_with_profile.csv and cumulative_returns_and_profile_graph.png.
+"""
+import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
-# Function to calculate daily returns and mimic UPRO
-def calculate_upro_mimic(ticker, start_date, end_date):
-    # Download SPY historical data
-    SPY_data = yf.download(ticker, start=start_date, end=end_date)
-    # Calculate daily returns for SPY
-    SPY_data["Daily Return"] = SPY_data["Close"].pct_change()
-    # Mimic UPRO (3x SPY's daily return)
-    SPY_data["UPRO Mimic"] = (SPY_data["Daily Return"] * 3) + 0.0000023
+TRADING_DAYS_PER_YEAR = 252
+LEVERAGE = 3
+UPRO_EXPENSE_RATIO = 0.0091  # 0.91% per year
+DAILY_EXPENSE = UPRO_EXPENSE_RATIO / TRADING_DAYS_PER_YEAR
 
-    # Combine SPY and UPRO data
-    combined_data = pd.DataFrame({
-        "S&P Daily Return": SPY_data["Daily Return"],
-        "UPRO Mimic Daily Return": SPY_data["UPRO Mimic"],
-    })
 
-    # Add cumulative returns for all three, starting with a value of 100
+def download_closes(ticker, start_date, end_date):
+    import yfinance as yf
+
+    data = yf.download(ticker, start=start_date, end=end_date, auto_adjust=True, progress=False)
+    if isinstance(data.columns, pd.MultiIndex):  # newer yfinance returns (field, ticker) columns
+        data.columns = data.columns.get_level_values(0)
+    if data.empty:
+        raise ValueError(f"No data returned for {ticker} between {start_date} and {end_date}")
+    return data["Close"]
+
+
+def calculate_upro_mimic(closes):
+    """Daily returns for the index and a 3x leveraged version net of its expense ratio."""
+    index_return = closes.pct_change().fillna(0.0)
+    upro_return = index_return * LEVERAGE - DAILY_EXPENSE
+    upro_return.iloc[0] = 0.0
+
     initial_value = 100
-    combined_data["SPY Cumulative"] = (1 + combined_data["S&P Daily Return"]).cumprod() * initial_value
-    combined_data["UPRO Mimic Cumulative"] = (1 - combined_data["UPRO Mimic Daily Return"]).cumprod() * initial_value
-
-    return combined_data
-
-# Function to simulate a portfolio with weekly investments
-def simulate_profile_return(combined_data, weekly_investment, spy_allocation, upro_allocation):
-    # Initialize portfolio values for SPY and UPRO Mimic
-    portfolio_spy = 0
-    portfolio_upro = 0
-    portfolio_spy_return = 0
-    portfolio_upro_return = 0
-    portfolio_contributions = 0
-    upro_high = 0
-    portfolio_high = 0
-    max_drawdown_upro = 0
-    max_drawdown_portfolio = 0
-    portfolio_value = []
-    portfolio_upro_value = []
-    portfolio_spy_value = []
-    portfolio_spy_normal = []
-    portfolio_upro_normal = []
-    portfolio_contributions_value = []
-    spy_high = 0  # Tracks the highest value
-    spy_low = 0
-    spy_drawdown_start = None  # Start date of the drawdown
-    spy_recovery_start = None  # Recovery start date
-    spy_recovery_end = None  # Recovery end date
-    max_drawdown_spy = 0  # Tracks the max drawdown
-    #recovery_time = 0  # Tracks the time taken for recovery
-    max_recovery_time = pd.Timedelta(0)  # Start with 0 days
-
-    # Add Quarter End column based on the last day of each quarter
-    combined_data.index = pd.to_datetime(combined_data.index)
-
-    # Identify the last day of each quarter
-    combined_data['Quarter End'] = combined_data.index.isin(
-        combined_data[combined_data.index.is_month_end & combined_data.index.month.isin([3, 6, 9, 12])].index
+    combined = pd.DataFrame(
+        {
+            "S&P Daily Return": index_return,
+            "UPRO Mimic Daily Return": upro_return,
+        }
     )
-
-    # Loop through each day in the dataset
-    for i in range(len(combined_data)):
-        # Weekly investments are added every Monday (or the first day of the dataset)
-        if i % 5 == 0:  # Assume a 5-day trading week
-            # Split the weekly investment between SPY and UPRO Mimic
-            investment_spy = weekly_investment * spy_allocation
-            investment_upro = weekly_investment * upro_allocation
-            investment_spy_profile = weekly_investment
-            investment_upro_profile = weekly_investment
-
-            # Add the investments to the portfolio
-            portfolio_spy += investment_spy
-            portfolio_upro += investment_upro
-            portfolio_spy_return += investment_spy_profile
-            portfolio_upro_return += investment_upro_profile
-            portfolio_contributions += weekly_investment
-
-        # Apply daily returns to grow the portfolio
-        if i > 0:  # Skip the first day (no previous data for returns)
-            portfolio_spy = portfolio_spy * (1 + combined_data["S&P Daily Return"].iloc[i])
-            portfolio_upro = portfolio_upro * (1 + combined_data["UPRO Mimic Daily Return"].iloc[i])
-
-            portfolio_spy_return = portfolio_spy_return * (1 + combined_data["S&P Daily Return"].iloc[i])
-            portfolio_upro_return = portfolio_upro_return * (1 + combined_data["UPRO Mimic Daily Return"].iloc[i])
-
-        # Check for a new high in the portfolio
-        if portfolio_spy_return > portfolio_contributions:
-            if spy_drawdown_start is not None:
-                spy_drawdown_end = combined_data.index[i]
-
-                recovery_time = spy_drawdown_end - spy_drawdown_start
-                if recovery_time > max_recovery_time:
-                    max_recovery_time = recovery_time
-                    print(f"Max Drawdown of {max_recovery_time.days} days")
-                    print(spy_high, spy_low)
-                    spy_drawdown = ((spy_high - spy_low) / spy_low) * 100
-                    print(spy_drawdown)
-                    spy_drawdown_start = None  # Reset drawdown start date
-
-        # If no new high, check if we're in a drawdown
-        if portfolio_spy_return < portfolio_contributions:
-            # Set the drawdown start date if it's the first drop below the high
-            if spy_drawdown_start is None:
-                spy_drawdown_start = combined_data.index[i]
-                spy_high = portfolio_spy_return
-                spy_low = min(spy_high, portfolio_spy_return)
+    combined.index = pd.to_datetime(combined.index)
+    combined["SPY Cumulative"] = (1 + index_return).cumprod() * initial_value
+    combined["UPRO Mimic Cumulative"] = (1 + upro_return).cumprod() * initial_value
+    return combined
 
 
-        # Rebalance at the end of the quarter
-        if combined_data["Quarter End"].iloc[i]:
-            spy_amount = (portfolio_spy + portfolio_upro) * spy_allocation
-            upro_amount = (portfolio_spy + portfolio_upro) * upro_allocation
-
-            portfolio_spy = spy_amount
-            portfolio_upro = upro_amount
-
-        portfolio_high = max(portfolio_high, (portfolio_upro + portfolio_spy))
-        portfolio_drawdown = ((portfolio_upro + portfolio_spy) - portfolio_high) / portfolio_high
-        max_drawdown_portfolio = min(max_drawdown_portfolio, portfolio_drawdown)
-
-        # Calculate the total portfolio value and store it
-        portfolio_spy_value.append(portfolio_spy_return)
-        portfolio_upro_value.append(portfolio_upro_return)
-
-        portfolio_spy_normal.append(portfolio_spy)
-        portfolio_upro_normal.append(portfolio_upro)
-        portfolio_value.append(portfolio_spy + portfolio_upro)
-
-        portfolio_contributions_value.append(portfolio_contributions)
+def first_trading_day_of_week(index):
+    weeks = index.to_period("W")
+    return ~weeks.duplicated()
 
 
-    # Add the portfolio value to the combined data
-    combined_data["S&P Portfolio Value"] = portfolio_spy_value
-    combined_data["UPRO Portfolio Value"] = portfolio_upro_value
+def last_trading_day_of_quarter(index):
+    quarters = index.to_period("Q")
+    is_last = ~quarters.duplicated(keep="last")
+    # The final row is only a quarter end if the data actually reaches the quarter's end
+    # (i.e. the next business day falls in a new quarter), not just where the data stops.
+    if len(index) and (index[-1] + pd.offsets.BDay(1)).to_period("Q") == quarters[-1]:
+        is_last[-1] = False
+    return is_last
 
-    combined_data["S&P Portfolio Normal"] = portfolio_spy_normal
-    combined_data["UPRO Portfolio Normal"] = portfolio_upro_normal
-    combined_data["Profile Portfolio Value"] = portfolio_value
-    
-    combined_data["Contributions"] = portfolio_contributions_value
 
-    combined_data["SPY Max Drawdown"] = max_drawdown_spy
-    combined_data["UPRO Max Drawdown"] = max_drawdown_upro
-    combined_data["Portfolio Max Drawdown"] = max_drawdown_portfolio
+def max_drawdown(values):
+    """Largest peak-to-trough decline as a negative percentage."""
+    running_peak = values.cummax()
+    return float(((values - running_peak) / running_peak).min() * 100)
 
-    final_contributions = combined_data["Contributions"].iloc[-1]
 
-    combined_data["UPRO_mimic_return"] = ((combined_data["UPRO Portfolio Value"].iloc[-1] - final_contributions) / final_contributions) * 100
-    combined_data["S&P_return"] = ((combined_data["S&P Portfolio Value"].iloc[-1] - final_contributions) / final_contributions) * 100
-    combined_data["Profile_return"] = ((combined_data["Profile Portfolio Value"].iloc[-1] - final_contributions) / final_contributions) * 100
+def longest_recovery(values):
+    """Longest time spent below a previous peak (still-open drawdowns count up to the last date)."""
+    running_peak = values.cummax()
+    underwater = values < running_peak
+    longest = pd.Timedelta(0)
+    start = None
+    for date, below in underwater.items():
+        if below and start is None:
+            start = date
+        elif not below and start is not None:
+            longest = max(longest, date - start)
+            start = None
+    if start is not None:
+        longest = max(longest, values.index[-1] - start)
+    return longest
 
-    return combined_data
 
-# Specify the time range
-start_date = "2020-01-01"
-end_date = "2020-12-01"
-ticker = "^GSPC"
+def sharpe_ratio(daily_returns, risk_free_rate=0.0):
+    excess = daily_returns - risk_free_rate / TRADING_DAYS_PER_YEAR
+    std = excess.std()
+    if not std or np.isnan(std):
+        return 0.0
+    return float(excess.mean() / std * np.sqrt(TRADING_DAYS_PER_YEAR))
 
-weekly_investment=100
-spy_allocation=0.7
-upro_allocation=0.3
 
-# Calculate and save results
-upro_data = calculate_upro_mimic(ticker=ticker, start_date=start_date, end_date=end_date)
+def simulate_profile_return(combined_data, weekly_investment, spy_allocation, upro_allocation):
+    """Invest weekly into three portfolios: all-index, all-UPRO, and a rebalanced mix.
 
-# Simulate profile return with weekly $100 investment (50% in SPY, 50% in UPRO Mimic)
-upro_data = simulate_profile_return(upro_data, weekly_investment=weekly_investment, spy_allocation=spy_allocation, upro_allocation=upro_allocation)
+    Contributions are bought at the close of the first trading day of each week, so
+    they start earning the next day. The mix is rebalanced on the last trading day
+    of each quarter.
+    """
+    data = combined_data.copy()
+    data.index = pd.to_datetime(data.index)
+    data["Contribution Day"] = first_trading_day_of_week(data.index)
+    data["Quarter End"] = last_trading_day_of_quarter(data.index)
 
-# Save to a CSV file
-upro_data.to_csv("upro_mimic_with_profile.csv")
+    spy_only = upro_only = mix_spy = mix_upro = contributions = 0.0
+    spy_values, upro_values, mix_spy_values, mix_upro_values = [], [], [], []
+    mix_values, mix_daily_returns, contribution_values = [], [], []
 
-# Plot the cumulative returns
-plt.figure(figsize=(12, 6))
+    for date, row in data.iterrows():
+        r_spy = row["S&P Daily Return"]
+        r_upro = row["UPRO Mimic Daily Return"]
 
-plt.plot(upro_data.index,
-upro_data["S&P Portfolio Value"], 
-label=f"S&P Cumulative Return {upro_data['S&P_return'].iloc[-1]:.2f}%", 
-color="blue")
+        # 1. Apply today's return to what was held overnight.
+        mix_before = mix_spy + mix_upro
+        spy_only *= 1 + r_spy
+        upro_only *= 1 + r_upro
+        mix_spy *= 1 + r_spy
+        mix_upro *= 1 + r_upro
+        mix_daily_returns.append((mix_spy + mix_upro) / mix_before - 1 if mix_before else 0.0)
 
-plt.plot(upro_data.index, 
-upro_data["UPRO Portfolio Value"], 
-label=f"UPRO Mimic Cumulative Return {upro_data['UPRO_mimic_return'].iloc[-1]:.2f}%", 
-color="orange")
+        # 2. Add this week's contribution at the close.
+        if row["Contribution Day"]:
+            spy_only += weekly_investment
+            upro_only += weekly_investment
+            mix_spy += weekly_investment * spy_allocation
+            mix_upro += weekly_investment * upro_allocation
+            contributions += weekly_investment
 
-plt.plot(upro_data.index, 
-upro_data["Profile Portfolio Value"], 
-label=f"Profile Portfolio Return {upro_data['Profile_return'].iloc[-1]:.2f}%", 
-color="green")
+        # 3. Rebalance the mix back to target weights.
+        if row["Quarter End"]:
+            total = mix_spy + mix_upro
+            mix_spy, mix_upro = total * spy_allocation, total * upro_allocation
 
-plt.plot(upro_data.index, 
-upro_data["Contributions"], 
-label="Profile Contributions", 
-color="purple")
+        spy_values.append(spy_only)
+        upro_values.append(upro_only)
+        mix_spy_values.append(mix_spy)
+        mix_upro_values.append(mix_upro)
+        mix_values.append(mix_spy + mix_upro)
+        contribution_values.append(contributions)
 
-plt.title("Cumulative Returns of S&P, UPRO Mimic, and Profile Portfolio")
-plt.xlabel("Date")
-plt.ylabel("Portfolio Value")
-plt.legend()
-plt.grid()
+    data["S&P Portfolio Value"] = spy_values
+    data["UPRO Portfolio Value"] = upro_values
+    data["S&P Portfolio Normal"] = mix_spy_values
+    data["UPRO Portfolio Normal"] = mix_upro_values
+    data["Profile Portfolio Value"] = mix_values
+    data["Profile Daily Return"] = mix_daily_returns
+    data["Contributions"] = contribution_values
+    # Time-weighted index for the mix, so drawdowns aren't masked by new contributions.
+    data["Profile Cumulative"] = (1 + data["Profile Daily Return"]).cumprod() * 100
 
-sharpe_ratios = [0, 1, 2]
+    final_contributions = contributions
+    for column, value_column in [
+        ("S&P_return", "S&P Portfolio Value"),
+        ("UPRO_mimic_return", "UPRO Portfolio Value"),
+        ("Profile_return", "Profile Portfolio Value"),
+    ]:
+        data[column] = (data[value_column].iloc[-1] - final_contributions) / final_contributions * 100
 
-metrics = {
-    "": ["Max Drawdown", "Sharpe Ratio"],
-    "S&P": [f"{upro_data['SPY Max Drawdown'].iloc[-1]:.2f}", f"{sharpe_ratios[0]:.2f}"],
-    "UPRO Mimic": [f"{upro_data['UPRO Max Drawdown'].iloc[-1]:.2f}", f"{sharpe_ratios[1]:.2f}"],
-    "Profile Portfolio": [f"{upro_data['Portfolio Max Drawdown'].iloc[-1]:.2f}", f"{sharpe_ratios[2]:.2f}"]
-}
+    return data
 
-table_data = pd.DataFrame(metrics)
 
-# Adding table to the plot
-table = plt.table(cellText=table_data.values,
-                  colLabels=table_data.columns,
-                  cellLoc="center",
-                  bbox=[0.0, -0.4, 1.0, 0.3])
+def summarize(data):
+    series = {
+        "S&P": (data["SPY Cumulative"], data["S&P Daily Return"]),
+        "UPRO Mimic": (data["UPRO Mimic Cumulative"], data["UPRO Mimic Daily Return"]),
+        "Profile Portfolio": (data["Profile Cumulative"], data["Profile Daily Return"]),
+    }
+    return {
+        name: {
+            "max_drawdown": max_drawdown(values),
+            "longest_recovery_days": longest_recovery(values).days,
+            "sharpe": sharpe_ratio(returns.iloc[1:]),
+        }
+        for name, (values, returns) in series.items()
+    }
 
-# Adjust layout to make room for the table
-plt.subplots_adjust(bottom=0.4)
-table.auto_set_font_size(False)
-table.set_fontsize(10)
 
-# Set uniform width for all cells
-for (row, col), cell in table.get_celld().items():
-    cell.set_width(0.1)  # Adjust the width value as needed (e.g., 0.1 for equal width)
+def plot_results(data, metrics, output_path):
+    import matplotlib.pyplot as plt
 
-plt.tight_layout()
+    plt.figure(figsize=(12, 6))
+    plt.plot(data.index, data["S&P Portfolio Value"],
+             label=f"S&P Return {data['S&P_return'].iloc[-1]:.2f}%", color="blue")
+    plt.plot(data.index, data["UPRO Portfolio Value"],
+             label=f"UPRO Mimic Return {data['UPRO_mimic_return'].iloc[-1]:.2f}%", color="orange")
+    plt.plot(data.index, data["Profile Portfolio Value"],
+             label=f"Profile Portfolio Return {data['Profile_return'].iloc[-1]:.2f}%", color="green")
+    plt.plot(data.index, data["Contributions"], label="Contributions", color="purple")
+    plt.title("Weekly Contributions: S&P vs UPRO Mimic vs Rebalanced Profile")
+    plt.xlabel("Date")
+    plt.ylabel("Portfolio Value")
+    plt.legend()
+    plt.grid()
 
-# Save the graph as a file
-plt.savefig("cumulative_returns_and_profile_graph.png", bbox_inches="tight")
+    table_data = pd.DataFrame(
+        {
+            "": ["Max Drawdown", "Longest Underwater", "Sharpe Ratio (rf=0)"],
+            **{
+                name: [f"{m['max_drawdown']:.2f}%", f"{m['longest_recovery_days']} days", f"{m['sharpe']:.2f}"]
+                for name, m in metrics.items()
+            },
+        }
+    )
+    table = plt.table(cellText=table_data.values, colLabels=table_data.columns,
+                      cellLoc="center", bbox=[0.0, -0.45, 1.0, 0.3])
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
+    plt.subplots_adjust(bottom=0.4)
+    plt.savefig(output_path, bbox_inches="tight")
+    return plt
 
-# Show the graph
-plt.show()
 
-print("UPRO mimic data with cumulative returns and profile portfolio has been saved to 'upro_mimic_with_profile.csv'.")
-print("Graph has been saved to 'cumulative_returns_and_profile_graph.png'.")
+def main():
+    start_date = "2020-01-01"
+    end_date = "2020-12-01"
+    ticker = "^GSPC"  # price index (no dividends); use "SPY" for total return
+
+    weekly_investment = 100
+    spy_allocation = 0.7
+    upro_allocation = 0.3
+
+    closes = download_closes(ticker, start_date, end_date)
+    data = calculate_upro_mimic(closes)
+    data = simulate_profile_return(data, weekly_investment, spy_allocation, upro_allocation)
+    metrics = summarize(data)
+
+    data.to_csv("upro_mimic_with_profile.csv")
+    plt = plot_results(data, metrics, "cumulative_returns_and_profile_graph.png")
+
+    for name, m in metrics.items():
+        print(f"{name}: max drawdown {m['max_drawdown']:.2f}%, "
+              f"longest underwater {m['longest_recovery_days']} days, Sharpe {m['sharpe']:.2f}")
+    print("Data saved to 'upro_mimic_with_profile.csv'; graph saved to "
+          "'cumulative_returns_and_profile_graph.png'.")
+    plt.show()
+
+
+if __name__ == "__main__":
+    main()

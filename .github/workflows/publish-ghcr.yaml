@@ -1,16 +1,41 @@
-name: Docker Image CI for GHCR
+name: Test and publish Docker image
 
 on:
-  push
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
-  build_and_publish:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Build and push the image
-        run: |
-          sudo docker login --username brandonpowell135 --password ${{ secrets.GH_PAT }} ghcr.io
-          sudo docker build . --tag ghcr.io/brandonpowell135/stockalertbot:latest
-          sudo docker push ghcr.io/brandonpowell135/stockalertbot:latest
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: pytest -q
+
+  publish:
+    needs: test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/stockalertbot:latest
+            ghcr.io/${{ github.repository_owner }}/stockalertbot:${{ github.sha }}
